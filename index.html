@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Szklarnia Maji 🌱</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0 0 10px #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🌱 Szklarnia Maji – Panel Sterowania 🌱</h1>
+
+    <div class="card">
+        <h2>Dane z ESP32</h2>
+        <p>Temperatura: <b id="temp">--</b> °C</p>
+        <p>Wilgotność powietrza: <b id="hum">--</b> %</p>
+        <p>Wilgotność gleby: <b id="soil">--</b></p>
+    </div>
+
+    <div class="card">
+        <h2>Sterowanie</h2>
+
+        <h3>Wentylator</h3>
+        <button onclick="sendCommand('fan','ON')">Włącz</button>
+        <button onclick="sendCommand('fan','OFF')">Wyłącz</button>
+
+        <h3>Pompka</h3>
+        <button onclick="sendCommand('pump','ON')">Podlej</button>
+        <button onclick="sendCommand('pump','OFF')">Stop</button>
+
+        <h3>LED</h3>
+        <button onclick="sendCommand('led','RED')">Czerwony</button>
+        <button onclick="sendCommand('led','GREEN')">Zielony</button>
+        <button onclick="sendCommand('led','BLUE')">Niebieski</button>
+        <button onclick="sendCommand('led','OFF')">Wyłącz</button>
+    </div>
+
+    <script>
+        // Połączenie z HiveMQ Cloud przez WebSockets
+        const client = mqtt.connect("wss://548b79c9bba044dc8eb4cd3fc0d2767c.s1.eu.hivemq.cloud:8884/mqtt", {
+            username: "Python",
+            password: "Morfeusz"
+        });
+
+        client.on("connect", () => {
+            console.log("Połączono z MQTT WebSocket!");
+
+            client.subscribe("greenhouse/sensors/temperature");
+            client.subscribe("greenhouse/sensors/humidity");
+            client.subscribe("greenhouse/sensors/moisture");
+        });
+
+        client.on("message", (topic, message) => {
+            const value = message.toString();
+
+            if (topic.endsWith("temperature")) {
+                document.getElementById("temp").innerText = value;
+            }
+            if (topic.endsWith("humidity")) {
+                document.getElementById("hum").innerText = value;
+            }
+            if (topic.endsWith("moisture")) {
+                document.getElementById("soil").innerText = value;
+            }
+        });
+
+        function sendCommand(device, value) {
+            client.publish(`greenhouse/control/${device}`, value);
+            console.log("Wysłano:", device, value);
+        }
+    </script>
+
+</body>
+</html>
