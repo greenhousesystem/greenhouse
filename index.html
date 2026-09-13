@@ -1,309 +1,119 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<title>Szklarnia ESP32 PRO</title>
-
-<style>
-/* ====== GLOBAL ====== */
-body {
-  margin: 0;
-  font-family: "Inter", system-ui;
-  background: #0d1117;
-  color: #e6e6e6;
-  display: flex;
-  height: 100vh;
-}
-
-/* ====== SIDEBAR ====== */
-.sidebar {
-  width: 240px;
-  background: #161b22;
-  border-right: 1px solid #21262d;
-  padding: 20px;
-}
-
-.sidebar h1 {
-  font-size: 22px;
-  margin-bottom: 20px;
-  color: #58a6ff;
-}
-
-.nav-item {
-  padding: 12px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #c9d1d9;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.nav-item:hover {
-  background: #1f2937;
-}
-
-.nav-item.active {
-  background: #238636;
-  color: #fff;
-}
-
-/* ====== MAIN ====== */
-.main {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-}
-
-/* ====== DASHBOARD CARDS ====== */
-.card {
-  background: #161b22;
-  border: 1px solid #21262d;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.card h2 {
-  margin: 0 0 16px 0;
-  font-size: 20px;
-  color: #58a6ff;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.data-box {
-  background: #0d1117;
-  border: 1px solid #21262d;
-  padding: 16px;
-  border-radius: 10px;
-}
-
-.data-title {
-  font-size: 14px;
-  color: #8b949e;
-}
-
-.data-value {
-  font-size: 28px;
-  font-weight: 600;
-  margin-top: 6px;
-}
-
-.status-tag {
-  margin-top: 8px;
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  background: #238636;
-  color: #fff;
-}
-
-/* ====== IMAGE SECTIONS ====== */
-.image-box {
-  background: #0d1117;
-  border: 1px solid #21262d;
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.image-box img {
-  width: 100%;
-  border-radius: 12px;
-  opacity: 0.95;
-}
-
-/* ====== CONTROLS ====== */
-.btn {
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  margin-right: 8px;
-  margin-top: 8px;
-}
-
-.btn-primary {
-  background: #238636;
-  color: #fff;
-}
-
-.btn-secondary {
-  background: #30363d;
-  color: #fff;
-}
-
-.btn-danger {
-  background: #b62324;
-  color: #fff;
-}
-
-input[type="color"], input[type="range"] {
-  margin-top: 10px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Szklarnia ESP32 PRO</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
-
 <body>
+  <div class="sidebar">
+    <h1>Szklarnia PRO</h1>
+    <div class="nav-item active" data-section="pulpit">📊 Pulpit</div>
+    <div class="nav-item" data-section="gleba">🌱 Gleba</div>
+    <div class="nav-item" data-section="sterowanie">⚙️ Sterowanie</div>
+    <div class="nav-item" data-section="led">💡 LED</div>
+    <div class="nav-item" data-section="kalibracja">🧭 Kalibracja</div>
+    <div class="nav-item" data-section="demo">🎞️ Demo</div>
+    <div class="nav-item" data-section="auto">🧠 Auto</div>
+  </div>
 
-<!-- ===== SIDEBAR ===== -->
-<div class="sidebar">
-  <h1>Szklarnia PRO</h1>
-
-  <div class="nav-item active" data-section="pulpit">📊 Pulpit</div>
-  <div class="nav-item" data-section="gleba">🌱 Gleba</div>
-  <div class="nav-item" data-section="sterowanie">⚙️ Sterowanie</div>
-  <div class="nav-item" data-section="led">💡 LED</div>
-  <div class="nav-item" data-section="kalibracja">🧭 Kalibracja</div>
-  <div class="nav-item" data-section="demo">🎞️ Demo</div>
-  <div class="nav-item" data-section="auto">🧠 Auto</div>
-</div>
-
-<!-- ===== MAIN ===== -->
-<div class="main">
-
-  <!-- ===== PULPIT ===== -->
-  <div id="section-pulpit" class="section">
-    <div class="card">
-      <h2>Pulpit — Sterowanie i pomiary</h2>
-
-      <div class="grid-3">
-        <div class="data-box">
-          <div class="data-title">Temperatura</div>
-          <div class="data-value" id="tempValue">-- °C</div>
-          <div class="status-tag">Optymalna</div>
-        </div>
-
-        <div class="data-box">
-          <div class="data-title">Wilgotność powietrza</div>
-          <div class="data-value" id="humAirValue">-- %</div>
-          <div class="status-tag">W normie</div>
-        </div>
-
-        <div class="data-box">
-          <div class="data-title">Wilgotność gleby</div>
-          <div class="data-value" id="humSoilValue">-- %</div>
-          <div class="status-tag">Nawodniona</div>
+  <div class="main">
+    <!-- Pulpit -->
+    <div id="section-pulpit" class="section">
+      <div class="card">
+        <h2>Pulpit — Sterowanie i pomiary</h2>
+        <div class="grid-3">
+          <div class="data-box">
+            <div class="data-title">Temperatura</div>
+            <div class="data-value" id="tempValue">-- °C</div>
+            <div class="status-tag">Optymalna</div>
+          </div>
+          <div class="data-box">
+            <div class="data-title">Wilgotność powietrza</div>
+            <div class="data-value" id="humAirValue">-- %</div>
+            <div class="status-tag">W normie</div>
+          </div>
+          <div class="data-box">
+            <div class="data-title">Wilgotność gleby</div>
+            <div class="data-value" id="humSoilValue">-- %</div>
+            <div class="status-tag">Nawodniona</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ===== IMAGE FROM YOUR UPLOAD ===== -->
-    <div class="image-box">
-      <img src="plant_dashboard.jpg" alt="Greenhouse dashboard">
+    <!-- Gleba -->
+    <div id="section-gleba" class="section" style="display:none;">
+      <div class="card">
+        <h2>Wilgotność gleby</h2>
+        <canvas id="soilChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Sterowanie -->
+    <div id="section-sterowanie" class="section" style="display:none;">
+      <div class="card">
+        <h2>Sterowanie urządzeniami</h2>
+        <button class="btn btn-primary" onclick="sendControl('pompka','on')">Pompka ON</button>
+        <button class="btn btn-secondary" onclick="sendControl('pompka','off')">Pompka OFF</button>
+        <button class="btn btn-primary" onclick="sendControl('wiatrak','on')">Wiatrak ON</button>
+        <button class="btn btn-secondary" onclick="sendControl('wiatrak','off')">Wiatrak OFF</button>
+        <div class="status-tag" id="modeBadge">Tryb: AUTO</div>
+      </div>
+    </div>
+
+    <!-- LED -->
+    <div id="section-led" class="section" style="display:none;">
+      <div class="card">
+        <h2>LED PRO</h2>
+        <label>Kolor</label>
+        <input type="color" id="ledColor" value="#00ff00" onchange="updateLED()">
+        <label>Jasność</label>
+        <input type="range" id="ledBrightness" min="10" max="255" value="128" oninput="updateLED()">
+        <br>
+        <button class="btn btn-secondary" onclick="setAnim(0)">Brak</button>
+        <button class="btn btn-secondary" onclick="setAnim(1)">Color-temp</button>
+        <button class="btn btn-secondary" onclick="setAnim(2)">Moisture-indicator</button>
+        <button class="btn btn-secondary" onclick="setAnim(3)">Air-glow</button>
+        <button class="btn btn-secondary" onclick="setAnim(4)">Fade</button>
+        <br>
+        <button class="btn btn-danger" onclick="ledOff()">LED OFF</button>
+      </div>
+    </div>
+
+    <!-- Kalibracja -->
+    <div id="section-kalibracja" class="section" style="display:none;">
+      <div class="card">
+        <h2>Kalibracja gleby</h2>
+        <button class="btn btn-primary" onclick="calibrate('dry')">Zapisz suchą glebę</button>
+        <button class="btn btn-primary" onclick="calibrate('wet')">Zapisz mokrą glebę</button>
+        <div class="status-tag" id="calibStatus">Kalibracja: --</div>
+      </div>
+    </div>
+
+    <!-- Demo -->
+    <div id="section-demo" class="section" style="display:none;">
+      <div class="card">
+        <h2>Tryb DEMO</h2>
+        <button class="btn btn-primary" onclick="setDemo(true)">Włącz DEMO</button>
+        <button class="btn btn-secondary" onclick="setDemo(false)">Wyłącz DEMO</button>
+      </div>
+    </div>
+
+    <!-- Auto -->
+    <div id="section-auto" class="section" style="display:none;">
+      <div class="card">
+        <h2>Tryb AUTO</h2>
+        <button class="btn btn-primary" onclick="setAuto()">AUTO</button>
+        <button class="btn btn-secondary" onclick="setManual()">MANUAL</button>
+      </div>
     </div>
   </div>
 
-  <!-- ===== GLEBA ===== -->
-  <div id="section-gleba" class="section" style="display:none;">
-    <div class="card">
-      <h2>Wilgotność gleby</h2>
-      <canvas id="soilChart"></canvas>
-    </div>
-
-    <div class="image-box">
-      <img src="soil_sensor.jpg" alt="Soil sensor">
-    </div>
-  </div>
-
-  <!-- ===== STEROWANIE ===== -->
-  <div id="section-sterowanie" class="section" style="display:none;">
-    <div class="card">
-      <h2>Sterowanie urządzeniami</h2>
-
-      <button class="btn btn-primary" onclick="sendControl('pompka','on')">Pompka ON</button>
-      <button class="btn btn-secondary" onclick="sendControl('pompka','off')">Pompka OFF</button>
-
-      <button class="btn btn-primary" onclick="sendControl('wiatrak','on')">Wiatrak ON</button>
-      <button class="btn btn-secondary" onclick="sendControl('wiatrak','off')">Wiatrak OFF</button>
-
-      <div class="status-tag" id="modeBadge">Tryb: AUTO</div>
-    </div>
-
-    <div class="image-box">
-      <img src="greenhouse_tech.jpg" alt="Greenhouse tech">
-    </div>
-  </div>
-
-  <!-- ===== LED ===== -->
-  <div id="section-led" class="section" style="display:none;">
-    <div class="card">
-      <h2>LED PRO</h2>
-
-      <label>Kolor</label>
-      <input type="color" id="ledColor" onchange="updateLED()">
-
-      <label>Jasność</label>
-      <input type="range" id="ledBrightness" min="10" max="255" value="128" oninput="updateLED()">
-
-      <button class="btn btn-outline" onclick="setAnim(0)">Brak</button>
-      <button class="btn btn-outline" onclick="setAnim(1)">Color-temp</button>
-      <button class="btn btn-outline" onclick="setAnim(2)">Moisture</button>
-      <button class="btn btn-outline" onclick="setAnim(3)">Air-glow</button>
-      <button class="btn btn-outline" onclick="setAnim(4)">Fade</button>
-
-      <button class="btn btn-danger" onclick="ledOff()">LED OFF</button>
-    </div>
-
-    <div class="image-box">
-      <img src="led_plant.jpg" alt="LED plant">
-    </div>
-  </div>
-
-  <!-- ===== KALIBRACJA ===== -->
-  <div id="section-kalibracja" class="section" style="display:none;">
-    <div class="card">
-      <h2>Kalibracja gleby</h2>
-
-      <button class="btn btn-primary" onclick="calibrate('dry')">Zapisz suchą glebę</button>
-      <button class="btn btn-primary" onclick="calibrate('wet')">Zapisz mokrą glebę</button>
-
-      <div class="status-tag" id="calibStatus">Kalibracja: --</div>
-    </div>
-
-    <div class="image-box">
-      <img src="root_sensor.jpg" alt="Root sensor">
-    </div>
-  </div>
-
-  <!-- ===== DEMO ===== -->
-  <div id="section-demo" class="section" style="display:none;">
-    <div class="card">
-      <h2>Tryb DEMO</h2>
-
-      <button class="btn btn-primary" onclick="setDemo(true)">Włącz DEMO</button>
-      <button class="btn btn-secondary" onclick="setDemo(false)">Wyłącz DEMO</button>
-    </div>
-
-    <div class="image-box">
-      <img src="greenhouse_demo.jpg" alt="Demo greenhouse">
-    </div>
-  </div>
-
-  <!-- ===== AUTO ===== -->
-  <div id="section-auto" class="section" style="display:none;">
-    <div class="card">
-      <h2>Tryb AUTO</h2>
-
-      <button class="btn btn-primary" onclick="setAuto()">AUTO</button>
-      <button class="btn btn-secondary" onclick="setManual()">MANUAL</button>
-    </div>
-
-    <div class="image-box">
-      <img src="auto_mode.jpg" alt="Auto mode">
-    </div>
-  </div>
-
-</div>
-
+  <script src="js/dashboard.js"></script>
 </body>
 </html>
+
 
