@@ -3,399 +3,307 @@
 <head>
 <meta charset="UTF-8">
 <title>Szklarnia ESP32 PRO</title>
+
 <style>
+/* ====== GLOBAL ====== */
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #0b0f19;
-  color: #e0e6ff;
+  font-family: "Inter", system-ui;
+  background: #0d1117;
+  color: #e6e6e6;
   display: flex;
   height: 100vh;
 }
+
+/* ====== SIDEBAR ====== */
 .sidebar {
-  width: 220px;
-  background: #050712;
-  border-right: 1px solid #1b2238;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
+  width: 240px;
+  background: #161b22;
+  border-right: 1px solid #21262d;
+  padding: 20px;
 }
+
 .sidebar h1 {
-  font-size: 20px;
-  margin: 0 0 16px 0;
-  color: #8ab4ff;
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #58a6ff;
 }
+
 .nav-item {
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #c9d1d9;
   display: flex;
   align-items: center;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #c3d1ff;
+  gap: 10px;
 }
-.nav-item span.icon {
-  margin-right: 8px;
+
+.nav-item:hover {
+  background: #1f2937;
 }
+
 .nav-item.active {
-  background: linear-gradient(90deg, #1f3b6f, #27457f);
-  color: #ffffff;
+  background: #238636;
+  color: #fff;
 }
+
+/* ====== MAIN ====== */
 .main {
   flex: 1;
-  padding: 16px;
+  padding: 24px;
   overflow-y: auto;
 }
+
+/* ====== DASHBOARD CARDS ====== */
 .card {
-  background: #111827;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 0 0 1px #1f2937;
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
 }
+
 .card h2 {
-  margin: 0 0 12px 0;
-  font-size: 18px;
-  color: #9fb7ff;
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  color: #58a6ff;
 }
-.grid-2 {
+
+.grid-3 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
-.btn {
+
+.data-box {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.data-title {
+  font-size: 14px;
+  color: #8b949e;
+}
+
+.data-value {
+  font-size: 28px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.status-tag {
+  margin-top: 8px;
   display: inline-block;
-  padding: 8px 14px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  background: #238636;
+  color: #fff;
+}
+
+/* ====== IMAGE SECTIONS ====== */
+.image-box {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.image-box img {
+  width: 100%;
+  border-radius: 12px;
+  opacity: 0.95;
+}
+
+/* ====== CONTROLS ====== */
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-size: 14px;
-  margin: 4px 4px 4px 0;
+  margin-right: 8px;
+  margin-top: 8px;
 }
+
 .btn-primary {
-  background: linear-gradient(90deg, #2563eb, #4f46e5);
+  background: #238636;
   color: #fff;
 }
+
 .btn-secondary {
-  background: #1f2937;
-  color: #e5e7eb;
-}
-.btn-danger {
-  background: #b91c1c;
+  background: #30363d;
   color: #fff;
 }
-.btn-outline {
-  background: transparent;
-  border: 1px solid #4b5563;
-  color: #e5e7eb;
+
+.btn-danger {
+  background: #b62324;
+  color: #fff;
 }
-.badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  background: #1f2937;
-  color: #9ca3af;
-  margin-right: 6px;
-}
-.value {
-  font-size: 24px;
-  font-weight: 600;
-}
-label {
-  font-size: 13px;
-  color: #9ca3af;
-}
-input[type="color"] {
-  border: none;
-  background: transparent;
-  width: 40px;
-  height: 24px;
-  padding: 0;
-}
-input[type="range"] {
-  width: 100%;
-}
-.status-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.status-item {
-  flex: 1;
-  min-width: 140px;
-}
-.chart-container {
-  position: relative;
-  height: 220px;
+
+input[type="color"], input[type="range"] {
+  margin-top: 10px;
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
+
+<!-- ===== SIDEBAR ===== -->
 <div class="sidebar">
   <h1>Szklarnia PRO</h1>
-  <div class="nav-item active" data-section="sensory"><span class="icon">🧪</span><span>Sensory</span></div>
-  <div class="nav-item" data-section="gleba"><span class="icon">🌱</span><span>Gleba</span></div>
-  <div class="nav-item" data-section="sterowanie"><span class="icon">🛠️</span><span>Sterowanie</span></div>
-  <div class="nav-item" data-section="led"><span class="icon">🟩</span><span>LED</span></div>
-  <div class="nav-item" data-section="kalibracja"><span class="icon">🧭</span><span>Kalibracja</span></div>
-  <div class="nav-item" data-section="demo"><span class="icon">🎞️</span><span>Demo</span></div>
-  <div class="nav-item" data-section="auto"><span class="icon">🧠</span><span>AUTO</span></div>
+
+  <div class="nav-item active" data-section="pulpit">📊 Pulpit</div>
+  <div class="nav-item" data-section="gleba">🌱 Gleba</div>
+  <div class="nav-item" data-section="sterowanie">⚙️ Sterowanie</div>
+  <div class="nav-item" data-section="led">💡 LED</div>
+  <div class="nav-item" data-section="kalibracja">🧭 Kalibracja</div>
+  <div class="nav-item" data-section="demo">🎞️ Demo</div>
+  <div class="nav-item" data-section="auto">🧠 Auto</div>
 </div>
+
+<!-- ===== MAIN ===== -->
 <div class="main">
-  <div id="section-sensory" class="section">
+
+  <!-- ===== PULPIT ===== -->
+  <div id="section-pulpit" class="section">
     <div class="card">
-      <h2>Sensory powietrza</h2>
-      <div class="status-row">
-        <div class="status-item">
-          <label>Temperatura</label>
-          <div class="value" id="tempValue">-- °C</div>
+      <h2>Pulpit — Sterowanie i pomiary</h2>
+
+      <div class="grid-3">
+        <div class="data-box">
+          <div class="data-title">Temperatura</div>
+          <div class="data-value" id="tempValue">-- °C</div>
+          <div class="status-tag">Optymalna</div>
         </div>
-        <div class="status-item">
-          <label>Wilgotnosc powietrza</label>
-          <div class="value" id="humAirValue">-- %</div>
+
+        <div class="data-box">
+          <div class="data-title">Wilgotność powietrza</div>
+          <div class="data-value" id="humAirValue">-- %</div>
+          <div class="status-tag">W normie</div>
+        </div>
+
+        <div class="data-box">
+          <div class="data-title">Wilgotność gleby</div>
+          <div class="data-value" id="humSoilValue">-- %</div>
+          <div class="status-tag">Nawodniona</div>
         </div>
       </div>
     </div>
+
+    <!-- ===== IMAGE FROM YOUR UPLOAD ===== -->
+    <div class="image-box">
+      <img src="plant_dashboard.jpg" alt="Greenhouse dashboard">
+    </div>
   </div>
 
+  <!-- ===== GLEBA ===== -->
   <div id="section-gleba" class="section" style="display:none;">
     <div class="card">
-      <h2>Wilgotnosc gleby</h2>
-      <div class="status-row">
-        <div class="status-item">
-          <label>Aktualna wilgotnosc</label>
-          <div class="value" id="humSoilValue">-- %</div>
-        </div>
-      </div>
-      <div class="chart-container">
-        <canvas id="soilChart"></canvas>
-      </div>
+      <h2>Wilgotność gleby</h2>
+      <canvas id="soilChart"></canvas>
+    </div>
+
+    <div class="image-box">
+      <img src="soil_sensor.jpg" alt="Soil sensor">
     </div>
   </div>
 
+  <!-- ===== STEROWANIE ===== -->
   <div id="section-sterowanie" class="section" style="display:none;">
     <div class="card">
-      <h2>Sterowanie urzadzeniami</h2>
-      <div class="status-row">
-        <div class="status-item">
-          <label>Pompka</label><br>
-          <button class="btn btn-primary" onclick="sendControl('pompka','on')">ON</button>
-          <button class="btn btn-secondary" onclick="sendControl('pompka','off')">OFF</button>
-        </div>
-        <div class="status-item">
-          <label>Wiatrak</label><br>
-          <button class="btn btn-primary" onclick="sendControl('wiatrak','on')">ON</button>
-          <button class="btn btn-secondary" onclick="sendControl('wiatrak','off')">OFF</button>
-        </div>
-      </div>
-      <div class="badge" id="modeBadge">Tryb: AUTO</div>
+      <h2>Sterowanie urządzeniami</h2>
+
+      <button class="btn btn-primary" onclick="sendControl('pompka','on')">Pompka ON</button>
+      <button class="btn btn-secondary" onclick="sendControl('pompka','off')">Pompka OFF</button>
+
+      <button class="btn btn-primary" onclick="sendControl('wiatrak','on')">Wiatrak ON</button>
+      <button class="btn btn-secondary" onclick="sendControl('wiatrak','off')">Wiatrak OFF</button>
+
+      <div class="status-tag" id="modeBadge">Tryb: AUTO</div>
+    </div>
+
+    <div class="image-box">
+      <img src="greenhouse_tech.jpg" alt="Greenhouse tech">
     </div>
   </div>
 
+  <!-- ===== LED ===== -->
   <div id="section-led" class="section" style="display:none;">
     <div class="card">
       <h2>LED PRO</h2>
-      <div class="grid-2">
-        <div>
-          <label>Kolor</label><br>
-          <input type="color" id="ledColor" value="#00ff00" onchange="updateLED()">
-          <br><br>
-          <label>Jasnosc</label><br>
-          <input type="range" id="ledBrightness" min="10" max="255" value="128" oninput="updateLED()">
-        </div>
-        <div>
-          <label>Animacja</label><br>
-          <button class="btn btn-outline" onclick="setAnim(0)">Brak</button>
-          <button class="btn btn-outline" onclick="setAnim(1)">Color-temp</button>
-          <button class="btn btn-outline" onclick="setAnim(2)">Moisture-indicator</button>
-          <button class="btn btn-outline" onclick="setAnim(3)">Air-glow</button>
-          <button class="btn btn-outline" onclick="setAnim(4)">Fade</button>
-        </div>
-      </div>
-      <br>
+
+      <label>Kolor</label>
+      <input type="color" id="ledColor" onchange="updateLED()">
+
+      <label>Jasność</label>
+      <input type="range" id="ledBrightness" min="10" max="255" value="128" oninput="updateLED()">
+
+      <button class="btn btn-outline" onclick="setAnim(0)">Brak</button>
+      <button class="btn btn-outline" onclick="setAnim(1)">Color-temp</button>
+      <button class="btn btn-outline" onclick="setAnim(2)">Moisture</button>
+      <button class="btn btn-outline" onclick="setAnim(3)">Air-glow</button>
+      <button class="btn btn-outline" onclick="setAnim(4)">Fade</button>
+
       <button class="btn btn-danger" onclick="ledOff()">LED OFF</button>
+    </div>
+
+    <div class="image-box">
+      <img src="led_plant.jpg" alt="LED plant">
     </div>
   </div>
 
+  <!-- ===== KALIBRACJA ===== -->
   <div id="section-kalibracja" class="section" style="display:none;">
     <div class="card">
       <h2>Kalibracja gleby</h2>
-      <p>Ustaw czujnik w <b>suchej</b> glebie i kliknij:</p>
-      <button class="btn btn-primary" onclick="calibrate('dry')">Zapisz sucha glebe</button>
-      <br><br>
-      <p>Ustaw czujnik w <b>mokrej</b> glebie i kliknij:</p>
-      <button class="btn btn-primary" onclick="calibrate('wet')">Zapisz mokra glebe</button>
-      <br><br>
-      <div id="calibStatus" class="badge">Kalibracja: --</div>
+
+      <button class="btn btn-primary" onclick="calibrate('dry')">Zapisz suchą glebę</button>
+      <button class="btn btn-primary" onclick="calibrate('wet')">Zapisz mokrą glebę</button>
+
+      <div class="status-tag" id="calibStatus">Kalibracja: --</div>
+    </div>
+
+    <div class="image-box">
+      <img src="root_sensor.jpg" alt="Root sensor">
     </div>
   </div>
 
+  <!-- ===== DEMO ===== -->
   <div id="section-demo" class="section" style="display:none;">
     <div class="card">
       <h2>Tryb DEMO</h2>
-      <p>Symuluje zmiany wilgotnosci gleby i powietrza, aby pokazac dzialanie systemu.</p>
-      <button class="btn btn-primary" onclick="setDemo(true)">Wlacz DEMO</button>
-      <button class="btn btn-secondary" onclick="setDemo(false)">Wylacz DEMO</button>
+
+      <button class="btn btn-primary" onclick="setDemo(true)">Włącz DEMO</button>
+      <button class="btn btn-secondary" onclick="setDemo(false)">Wyłącz DEMO</button>
+    </div>
+
+    <div class="image-box">
+      <img src="greenhouse_demo.jpg" alt="Demo greenhouse">
     </div>
   </div>
 
+  <!-- ===== AUTO ===== -->
   <div id="section-auto" class="section" style="display:none;">
     <div class="card">
       <h2>Tryb AUTO</h2>
-      <p>Przywraca pelna automatyke szklarni (pompka, wiatrak, LED). Animacje LED sa wylaczane.</p>
+
       <button class="btn btn-primary" onclick="setAuto()">AUTO</button>
       <button class="btn btn-secondary" onclick="setManual()">MANUAL</button>
     </div>
+
+    <div class="image-box">
+      <img src="auto_mode.jpg" alt="Auto mode">
+    </div>
   </div>
+
 </div>
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
-<script>
-/* ============================
-   MQTT WebSockets – połączenie
-   ============================ */
-
-const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
-
-client.on("connect", () => {
-  console.log("Połączono z MQTT");
-  client.subscribe("szklarnia/dane");
-  client.subscribe("szklarnia/status");
-});
-
-/* ============================
-   Odbiór danych z ESP32
-   ============================ */
-
-client.on("message", (topic, msg) => {
-  const data = JSON.parse(msg.toString());
-
-  if (topic === "szklarnia/dane") {
-    document.getElementById("tempValue").innerText = data.temp + " °C";
-    document.getElementById("humAirValue").innerText = data.humAir + " %";
-    document.getElementById("humSoilValue").innerText = data.humSoil + " %";
-
-    updateChart(data.humSoil);
-  }
-
-  if (topic === "szklarnia/status") {
-    document.getElementById("modeBadge").innerText =
-      "Tryb: " + (data.auto ? "AUTO" : "MANUAL");
-  }
-});
-
-/* ============================
-   Wysyłanie komend do ESP32
-   ============================ */
-
-function sendControl(device, action) {
-  client.publish("szklarnia/control", JSON.stringify({ device, action }));
-}
-
-function updateLED() {
-  const color = document.getElementById("ledColor").value;
-  const bright = document.getElementById("ledBrightness").value;
-  const anim = window.currentAnim || 0;
-
-  client.publish("szklarnia/led", JSON.stringify({
-    mode: "manual",
-    color,
-    bright,
-    anim
-  }));
-}
-
-function setAnim(mode) {
-  window.currentAnim = mode;
-  updateLED();
-}
-
-function ledOff() {
-  client.publish("szklarnia/led", JSON.stringify({ mode: "off" }));
-}
-
-function calibrate(mode) {
-  client.publish("szklarnia/calibrate", JSON.stringify({ mode }));
-  document.getElementById("calibStatus").innerText =
-    "Kalibracja: " + mode.toUpperCase();
-}
-
-function setDemo(on) {
-  client.publish("szklarnia/demo", JSON.stringify({ on }));
-}
-
-function setAuto() {
-  client.publish("szklarnia/mode", JSON.stringify({ auto: 1 }));
-  document.getElementById("modeBadge").innerText = "Tryb: AUTO";
-}
-
-function setManual() {
-  client.publish("szklarnia/mode", JSON.stringify({ auto: 0 }));
-  document.getElementById("modeBadge").innerText = "Tryb: MANUAL";
-}
-
-/* ============================
-   Wykres gleby
-   ============================ */
-
-let soilChart;
-
-function initChart() {
-  const ctx = document.getElementById('soilChart').getContext('2d');
-  soilChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [{
-        label: 'Wilgotność gleby (%)',
-        data: [],
-        borderColor: '#60a5fa',
-        backgroundColor: 'rgba(96,165,250,0.15)',
-        tension: 0.3
-      }]
-    },
-    options: {
-      scales: {
-        x: { display: false },
-        y: { min: 0, max: 100 }
-      }
-    }
-  });
-}
-
-function updateChart(value) {
-  const now = new Date().toLocaleTimeString();
-  soilChart.data.labels.push(now);
-  soilChart.data.datasets[0].data.push(value);
-
-  if (soilChart.data.labels.length > 30) {
-    soilChart.data.labels.shift();
-    soilChart.data.datasets[0].data.shift();
-  }
-
-  soilChart.update();
-}
-
-/* ============================
-   Nawigacja
-   ============================ */
-
-document.addEventListener("DOMContentLoaded", () => {
-  initChart();
-
-  document.querySelectorAll(".nav-item").forEach(item => {
-    item.addEventListener("click", () => {
-      document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-
-      const section = item.getAttribute("data-section");
-      document.querySelectorAll(".section").forEach(s => s.style.display = "none");
-      document.getElementById("section-" + section).style.display = "block";
-    });
-  });
-});
-</script>
 </body>
 </html>
+
