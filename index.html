@@ -1,69 +1,148 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Szklarnia IoT</title>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
-    <!-- MQTT WebSockets -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
+/* ============================
+   MQTT WebSockets – połączenie
+   ============================ */
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
 
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        h1 { color: #2a7; }
-    </style>
-</head>
+client.on("connect", () => {
+  console.log("Połączono z MQTT");
+  client.subscribe("szklarnia/dane");
+  client.subscribe("szklarnia/status");
+});
 
-<body>
-    <h1>🌱 Szklarnia – Live Dashboard</h1>
+/* ============================
+   Odbiór danych z ESP32
+   ============================ */
 
-    <canvas id="tempChart" width="400" height="200"></canvas>
+client.on("message", (topic, msg) => {
+  const data = JSON.parse(msg.toString());
 
-    <h2>Sterowanie</h2>
-    <button onclick="sendCommand('LED_ON')">Włącz LED</button>
-    <button onclick="sendCommand('LED_OFF')">Wyłącz LED</button>
+  if (topic === "szklarnia/dane") {
+    document.getElementById("tempValue").innerText = data.temp + " °C";
+    document.getElementById("humAirValue").innerText = data.humAir + " %";
+    document.getElementById("humSoilValue").innerText = data.humSoil + " %";
 
-    <script>
-        // Połączenie MQTT WebSockets
-        const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+    updateChart(data.humSoil);
+  }
 
-        client.on("connect", () => {
-            console.log("Połączono z MQTT");
-            client.subscribe("szklarnia/dane");
-        });
+  if (topic === "szklarnia/status") {
+    document.getElementById("modeBadge").innerText =
+      "Tryb: " + (data.auto ? "AUTO" : "MANUAL");
+  }
+});
 
-        // Wykres temperatury
-        const ctx = document.getElementById("tempChart").getContext("2d");
-        const tempChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: [],
-                datasets: [{
-                    label: "Temperatura",
-                    data: [],
-                    borderColor: "red",
-                    borderWidth: 2
-                }]
-            }
-        });
+/* ============================
+   Wysyłanie komend do ESP32
+   ============================ */
 
-        // Odbiór danych z ESP32
-        client.on("message", (topic, message) => {
-            const data = JSON.parse(message.toString());
-            console.log("Dane:", data);
+function sendControl(device, action) {
+  client.publish("szklarnia/control", JSON.stringify({ device, action }));
+}
 
-            tempChart.data.labels.push(new Date().toLocaleTimeString());
-            tempChart.data.datasets[0].data.push(data.temp);
-            tempChart.update();
-        });
+function updateLED() {
+  const color = document.getElementById("ledColor").value;
+  const bright = document.getElementById("ledBrightness").value;
+  const anim = window.currentAnim || 0;
 
-        // Wysyłanie komend do ESP32
-        function sendCommand(cmd) {
-            client.publish("szklarnia/komendy", cmd);
-            console.log("Wysłano:", cmd);
-        }
-    </script>
-</body>
-</html>
+  client.publish("szklarnia/led", JSON.stringify({
+    mode: "manual",
+    color,
+    bright,
+    anim
+  }));
+}
+
+function setAnim(mode) {
+  window.currentAnim = mode;
+  updateLED();
+}
+
+function ledOff() {
+  client.publish("szklarnia/led", JSON.stringify({ mode: "off" }));
+}
+
+function calibrate(mode) {
+  client.publish("szklarnia/calibrate", JSON.stringify({ mode }));
+  document.getElementById("calibStatus").innerText =
+    "Kalibracja: " + mode.toUpperCase();
+}
+
+function setDemo(on) {
+  client.publish("szklarnia/demo", JSON.stringify({ on }));
+}
+
+function setAuto() {
+  client.publish("szklarnia/mode", JSON.stringify({ auto: 1 }));
+  document.getElementById("modeBadge").innerText = "Tryb: AUTO";
+}
+
+function setManual() {
+  client.publish("szklarnia/mode", JSON.stringify({ auto: 0 }));
+  document.getElementById("modeBadge").innerText = "Tryb: MANUAL";
+}
+
+/* ============================
+   Wykres gleby
+   ============================ */
+
+let soilChart;
+
+function initChart() {
+  const ctx = document.getElementById('soilChart').getContext('2d');
+  soilChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Wilgotność gleby (%)',
+        data: [],
+        borderColor: '#60a5fa',
+        backgroundColor: 'rgba(96,165,250,0.15)',
+        tension: 0.3
+      }]
+    },
+    options: {
+      scales: {
+        x: { display: false },
+        y: { min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+function updateChart(value) {
+  const now = new Date().toLocaleTimeString();
+  soilChart.data.labels.push(now);
+  soilChart.data.datasets[0].data.push(value);
+
+  if (soilChart.data.labels.length > 30) {
+    soilChart.data.labels.shift();
+    soilChart.data.datasets[0].data.shift();
+  }
+
+  soilChart.update();
+}
+
+/* ============================
+   Nawigacja
+   ============================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+  initChart();
+
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+
+      const section = item.getAttribute("data-section");
+      document.querySelectorAll(".section").forEach(s => s.style.display = "none");
+      document.getElementById("section-" + section).style.display = "block";
+    });
+  });
+});
+</script>
+
