@@ -1,0 +1,137 @@
+// ===== MQTT WebSockets =====
+const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+
+client.on("connect", () => {
+  console.log("Połączono z MQTT");
+
+  client.subscribe("szklarnia/dane");
+  client.subscribe("szklarnia/status");
+  client.subscribe("szklarnia/control");
+  client.subscribe("szklarnia/led");
+  client.subscribe("szklarnia/calibrate");
+  client.subscribe("szklarnia/demo");
+  client.subscribe("szklarnia/mode");
+});
+
+// ===== Odbiór danych z ESP32 =====
+client.on("message", (topic, msg) => {
+  const data = JSON.parse(msg.toString());
+
+  if (topic === "szklarnia/dane") {
+    document.getElementById("tempValue").innerText = data.temp + " °C";
+    document.getElementById("humAirValue").innerText = data.humAir + " %";
+    document.getElementById("humSoilValue").innerText = data.humSoil + " %";
+    updateChart(data.humSoil);
+  }
+
+  if (topic === "szklarnia/status") {
+    document.getElementById("modeBadge").innerText =
+      "Tryb: " + (data.auto ? "AUTO" : "MANUAL");
+  }
+});
+
+// ===== Sterowanie urządzeniami =====
+function sendControl(device, action) {
+  client.publish("szklarnia/control", JSON.stringify({ device, action }));
+}
+
+// ===== LED =====
+function updateLED() {
+  const color = document.getElementById("ledColor").value;
+  const bright = document.getElementById("ledBrightness").value;
+  const anim = window.currentAnim || 0;
+
+  client.publish("szklarnia/led", JSON.stringify({
+    mode: "manual",
+    color,
+    bright,
+    anim
+  }));
+}
+
+function setAnim(mode) {
+  window.currentAnim = mode;
+  updateLED();
+}
+
+function ledOff() {
+  client.publish("szklarnia/led", JSON.stringify({ mode: "off" }));
+}
+
+// ===== Kalibracja =====
+function calibrate(mode) {
+  client.publish("szklarnia/calibrate", JSON.stringify({ mode }));
+  document.getElementById("calibStatus").innerText =
+    "Kalibracja: " + mode.toUpperCase();
+}
+
+// ===== Demo =====
+function setDemo(on) {
+  client.publish("szklarnia/demo", JSON.stringify({ on }));
+}
+
+// ===== AUTO / MANUAL =====
+function setAuto() {
+  client.publish("szklarnia/mode", JSON.stringify({ auto: 1 }));
+  document.getElementById("modeBadge").innerText = "Tryb: AUTO";
+}
+
+function setManual() {
+  client.publish("szklarnia/mode", JSON.stringify({ auto: 0 }));
+  document.getElementById("modeBadge").innerText = "Tryb: MANUAL";
+}
+
+// ===== Wykres gleby =====
+let soilChart;
+
+function initChart() {
+  const ctx = document.getElementById('soilChart').getContext('2d');
+  soilChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Wilgotność gleby (%)',
+        data: [],
+        borderColor: '#60a5fa',
+        backgroundColor: 'rgba(96,165,250,0.15)',
+        tension: 0.3
+      }]
+    },
+    options: {
+      scales: {
+        x: { display: false },
+        y: { min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+function updateChart(value) {
+  const now = new Date().toLocaleTimeString();
+  soilChart.data.labels.push(now);
+  soilChart.data.datasets[0].data.push(value);
+
+  if (soilChart.data.labels.length > 30) {
+    soilChart.data.labels.shift();
+    soilChart.data.datasets[0].data.shift();
+  }
+
+  soilChart.update();
+}
+
+// ===== Nawigacja =====
+document.addEventListener("DOMContentLoaded", () => {
+  initChart();
+
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+
+      const section = item.getAttribute("data-section");
+      document.querySelectorAll(".section").forEach(s => s.style.display = "none");
+      document.getElementById("section-" + section).style.display = "block";
+    });
+  });
+});
